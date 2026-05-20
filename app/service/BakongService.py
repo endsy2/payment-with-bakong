@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from fastapi import HTTPException,Header
+from fastapi import HTTPException, Header
 from fastapi.responses import JSONResponse
 from bakong_khqr import KHQR
 import os
@@ -9,6 +9,7 @@ from pydantic import BaseModel
 import logging
 from pip._internal.cli import status_codes
 from datetime import datetime
+from typing import Optional
 
 load_dotenv()  # Load environment variables from .env
 
@@ -51,7 +52,7 @@ def get_bakong_token():
     
     return None
         
-async def verifyMD5(md5: str, booking_id: int,token:str):
+async def verifyMD5(md5: str, booking_id: int, token: str):
     try:
         if not md5:
             raise HTTPException(status_code=400, detail="md5 is required")
@@ -101,10 +102,10 @@ async def verifyMD5(md5: str, booking_id: int,token:str):
             "method": "KHQR",
             "transaction_id": payment_info_data.get("hash"),
             "status": "PAID",
-            "paidAt":datetime.utcfromtimestamp(payment_info_data.get("createdDateMs") / 1000).isoformat(),
+            "paidAt": datetime.utcfromtimestamp(payment_info_data.get("createdDateMs") / 1000).isoformat(),
         }
 
-        return result
+        return payment_data
 
     except HTTPException:
         raise
@@ -123,7 +124,7 @@ def payment_info(md5: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-def generateQR(amount: float,currency: str,merchant_name: str):
+def generateQR(amount: float, currency: str, merchant_name: str):
     try:
         current_bakong_token = get_bakong_token()
         
@@ -151,7 +152,7 @@ def generateQR(amount: float,currency: str,merchant_name: str):
         raise HTTPException(status_code=500, detail=str(e))
     
 
-async def get_token_from_header(authorization: str | None = Header(None)):
+async def get_token_from_header(authorization: Optional[str] = Header(None)):
     """
     Extract Bearer token from request header
     """
@@ -163,6 +164,3 @@ async def get_token_from_header(authorization: str | None = Header(None)):
 
     token = authorization.split(" ")[1]
     return token
-
-
-

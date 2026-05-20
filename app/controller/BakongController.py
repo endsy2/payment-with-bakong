@@ -1,25 +1,24 @@
-from idlelib.query import Query
-
-from fastapi import APIRouter, Query,Body
+from fastapi import APIRouter, Query, Body
 from pydantic import BaseModel
 from app.service import BakongService
-from fastapi import HTTPException,Header
-import logging 
+from fastapi import HTTPException, Header
+import logging
+from typing import Optional
 
 router = APIRouter(prefix="/bakong", tags=["bakong"])
 
 class VerifyMD5Request(BaseModel):
     md5: str
-    booking_id:int
+    booking_id: int
 
 @router.get("/generateQR")
-async def generate_bakong_qr(amount: float = Query(...), currency: str = Query(...),merchant_name: str = Query(...)):
-    return BakongService.generateQR(amount,currency,merchant_name)
+async def generate_bakong_qr(amount: float = Query(...), currency: str = Query(...), merchant_name: str = Query(...)):
+    return BakongService.generateQR(amount, currency, merchant_name)
 
 @router.post("/verifyMD5")
 async def verify_md5_endpoint(
     request: VerifyMD5Request = Body(...),
-    authorization: str | None = Header(None)  # Extract token from header
+    authorization: Optional[str] = Header(None)  # Extract token from header
 ):
     # 1️⃣ Get token from header
     if not authorization or not authorization.startswith("Bearer "):
@@ -32,7 +31,7 @@ async def verify_md5_endpoint(
 
 
 @router.post("/payment_info")
-async def payment_info(md5:str):
+async def payment_info(md5: str):
     return BakongService.payment_info(md5)
 
 @router.post("/renewToken")
