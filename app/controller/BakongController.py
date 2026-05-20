@@ -10,7 +10,6 @@ router = APIRouter(prefix="/bakong", tags=["bakong"])
 
 class VerifyMD5Request(BaseModel):
     md5: str
-    booking_id:int
 
 @router.get("/generateQR")
 async def generate_bakong_qr(amount: float = Query(...), currency: str = Query(...),merchant_name: str = Query(...)):
