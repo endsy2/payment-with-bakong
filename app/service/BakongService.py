@@ -183,8 +183,11 @@ def generateQR(amount: float, currency: str, merchant_name: str):
             static=False  # Static or Dynamic QR code
         )
         md5 = khqr.generate_md5(qr)
-
-        return JSONResponse({"qr": qr, "md5": md5}, status_code=200)
+        response =({
+            "qr":qr,
+            "md5":md5,
+        })
+        return response
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
