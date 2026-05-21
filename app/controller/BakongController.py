@@ -52,33 +52,15 @@ async def generate_bakong_qr(
 async def verify_md5_endpoint(
     request: VerifyMD5Request = Body(...)
 ):
-    try:
         # 2️⃣ Call service and pass token
         result = await BakongService.verifyMD5(request.md5)
         
         # 3️⃣ Return success response matching BakongResponse DTO
         return {
-            "responseCode": 0,
-            "responseMessage": "Payment verified successfully",
-            "errorCode": None,
             "data": result
         }
     
-    except HTTPException as e:
-        return {
-            "responseCode": e.status_code,
-            "responseMessage": e.detail,
-            "errorCode": e.status_code,
-            "data": None
-        }
-    except Exception as e:
-        logging.exception("Error in verify_md5_endpoint")
-        return {
-            "responseCode": 500,
-            "responseMessage": str(e),
-            "errorCode": 500,
-            "data": None
-        }
+
 
 
 @router.post("/payment_info")
