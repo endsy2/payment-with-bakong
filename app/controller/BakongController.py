@@ -23,7 +23,7 @@ async def generate_bakong_qr(
         result = BakongService.generateQR(amount, currency, merchant_name,bank_account,number_phone)
 
         return {
-            "responseCode": 0,
+            "responseCode": 200,
             "responseMessage": "Generate QR successfully",
             "errorCode": None,
             "data": result
@@ -58,7 +58,7 @@ async def verify_md5_endpoint(
         
         # 3️⃣ Return success response matching BakongResponse DTO
         return {
-            "responseCode": 200,
+            "responseCode": 0,
             "responseMessage": "Payment verified successfully",
             "errorCode": None,
             "data": result
