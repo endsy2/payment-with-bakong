@@ -12,8 +12,39 @@ class VerifyMD5Request(BaseModel):
     md5: str
 
 @router.get("/generateQR")
-async def generate_bakong_qr(amount: float = Query(...), currency: str = Query(...), merchant_name: str = Query(...)):
-    return BakongService.generateQR(amount, currency, merchant_name)
+async def generate_bakong_qr(
+    amount: float = Query(...),
+    currency: str = Query(...),
+    merchant_name: str = Query(...)
+):
+    try:
+        result = BakongService.generateQR(amount, currency, merchant_name)
+
+        return {
+            "responseCode": 200,
+            "responseMessage": "Generate QR successfully",
+            "errorCode": None,
+            "data": result
+        }
+
+    except HTTPException as e:
+        return {
+            "responseCode": e.status_code,
+            "responseMessage": e.detail,
+            "errorCode": e.status_code,
+            "data": None
+        }
+
+    except Exception as e:
+        logging.exception("Error in generate_bakong_qr endpoint")
+
+        return {
+            "responseCode": 500,
+            "responseMessage": str(e),
+            "errorCode": 500,
+            "data": None
+        }
+
 
 @router.post("/verifyMD5")
 async def verify_md5_endpoint(
