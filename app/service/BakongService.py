@@ -1,3 +1,5 @@
+from urllib.parse import  unquote
+
 from dotenv import load_dotenv
 from fastapi import HTTPException, Header
 from fastapi.responses import JSONResponse
@@ -172,7 +174,7 @@ def generateQR(amount: float, currency: str, merchant_name: str,bank_account:str
         # Generate QR code data for a transaction
         qr = khqr.create_qr(
             bank_account=bank_account,  # Your Bakong profile user_name@bank
-            merchant_name=merchant_name,
+            merchant_name=unquote(merchant_name) ,
             merchant_city='Phnom Penh',
             amount=amount,  # Use passed parameter
             currency=currency,  # USD or KHR
