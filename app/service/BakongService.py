@@ -4,8 +4,6 @@ from fastapi.responses import JSONResponse
 from bakong_khqr import KHQR
 import os
 import httpx
-from fastapi import Request
-from pydantic import BaseModel
 import logging
 from pip._internal.cli import status_codes
 from datetime import datetime
@@ -17,9 +15,11 @@ load_dotenv()  # Load environment variables from .env
 bakong_token = None
 email = os.getenv("email")
 
-
-async def renew_bakong_token():
+async def renew_bakong_token(email: str):
     global bakong_token
+
+    if bakong_token is not None:
+        return bakong_token
 
     bakong_url = os.getenv("BakongUrl")
 
@@ -28,28 +28,20 @@ async def renew_bakong_token():
 
             url = f"{bakong_url.rstrip('/')}/v1/renew_token"
 
-            headers = {
-                "Content-Type": "application/json"
-            }
-
             payload = {
                 "email": email
             }
 
-            # 🔥 DEBUG 1: request info
+            headers = {
+                "Content-Type": "application/json"
+            }
+
             logging.info(f"Calling Bakong URL: {url}")
             logging.info(f"Payload: {payload}")
 
-            response = await client.post(
-                url,
-                json=payload,
-                headers=headers
-            )
+            response = await client.post(url, json=payload, headers=headers)
 
-            # 🔥 DEBUG 2: status code
             logging.info(f"Status Code: {response.status_code}")
-
-            # 🔥 DEBUG 3: raw response body
             logging.info(f"Response Text: {response.text}")
 
             response.raise_for_status()
@@ -102,7 +94,7 @@ async def verifyMD5(md5: str):
             raise HTTPException(status_code=400, detail="md5 is required")
 
         # Check if bakong_token exists, if not renew it
-        current_bakong_token =await renew_bakong_token()
+        current_bakong_token =await renew_bakong_token(email)
         print (f"Email:{email}")
         print(f"Current Bakong token: {current_bakong_token}")
         if not current_bakong_token:
