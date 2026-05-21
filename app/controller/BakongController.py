@@ -15,13 +15,15 @@ class VerifyMD5Request(BaseModel):
 async def generate_bakong_qr(
     amount: float = Query(...),
     currency: str = Query(...),
-    merchant_name: str = Query(...)
+    merchant_name: str = Query(...),
+    bank_account: str = Query(...),
+    number_phone: str = Query(...),
 ):
     try:
-        result = BakongService.generateQR(amount, currency, merchant_name)
+        result = BakongService.generateQR(amount, currency, merchant_name,bank_account,number_phone)
 
         return {
-            "responseCode": 200,
+            "responseCode": 0,
             "responseMessage": "Generate QR successfully",
             "errorCode": None,
             "data": result

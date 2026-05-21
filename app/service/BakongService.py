@@ -162,7 +162,7 @@ def payment_info(md5: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-def generateQR(amount: float, currency: str, merchant_name: str):
+def generateQR(amount: float, currency: str, merchant_name: str,bank_account:str,number_phone:str):
     try:
         current_bakong_token = get_bakong_token()
         
@@ -171,13 +171,13 @@ def generateQR(amount: float, currency: str, merchant_name: str):
 
         # Generate QR code data for a transaction
         qr = khqr.create_qr(
-            bank_account='chin_kongming@aclb',  # Your Bakong profile user_name@bank
+            bank_account=bank_account,  # Your Bakong profile user_name@bank
             merchant_name=merchant_name,
             merchant_city='Phnom Penh',
             amount=amount,  # Use passed parameter
             currency=currency,  # USD or KHR
             store_label='MShop',
-            phone_number='85581362035',
+            phone_number=number_phone,
             bill_number='TRX01234567',
             terminal_label='Cashier-01',
             static=False  # Static or Dynamic QR code
