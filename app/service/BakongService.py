@@ -15,25 +15,69 @@ load_dotenv()  # Load environment variables from .env
 
 # Global variable to store Bakong token
 bakong_token = None
+email = os.getenv("email")
 
 
 async def renew_bakong_token():
-    """
-    Renew Bakong token by calling Node.js backend
-    """
     global bakong_token
+
     bakong_url = os.getenv("BakongUrl")
+
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"{bakong_url}/bakong/renewToken")
+
+            url = f"{bakong_url.rstrip('/')}/v1/renew_token"
+
+            headers = {
+                "Content-Type": "application/json"
+            }
+
+            payload = {
+                "email": email
+            }
+
+            # 🔥 DEBUG 1: request info
+            logging.info(f"Calling Bakong URL: {url}")
+            logging.info(f"Payload: {payload}")
+
+            response = await client.post(
+                url,
+                json=payload,
+                headers=headers
+            )
+
+            # 🔥 DEBUG 2: status code
+            logging.info(f"Status Code: {response.status_code}")
+
+            # 🔥 DEBUG 3: raw response body
+            logging.info(f"Response Text: {response.text}")
+
             response.raise_for_status()
+
             data = response.json()
-            bakong_token = data.get("token")
-            logging.info("Bakong token renewed successfully")
+
+            logging.info(f"Parsed JSON: {data}")
+
+            bakong_token = data["data"]["token"]
+
+            logging.info(f"Bakong token renewed successfully: {bakong_token}")
+
             return bakong_token
+
+    except httpx.HTTPStatusError as e:
+        logging.error(f"HTTP error: {e.response.status_code}")
+        logging.error(f"Response body: {e.response.text}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Bakong API error: {e.response.text}"
+        )
+
     except Exception as e:
-        logging.error(f"Failed to renew Bakong token: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Token renewal failed: {str(e)}")
+        logging.exception("Unexpected error while renewing token")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Token renewal failed: {str(e)}"
+        )
 
 def get_bakong_token():
     """
@@ -52,17 +96,21 @@ def get_bakong_token():
     
     return None
         
-async def verifyMD5(md5: str, booking_id: int, token: str):
+
+async def verifyMD5(md5: str):
+
     try:
         if not md5:
             raise HTTPException(status_code=400, detail="md5 is required")
 
         # Check if bakong_token exists, if not renew it
-        current_bakong_token = get_bakong_token()
+        current_bakong_token =await renew_bakong_token()
+        print (f"Email:{email}")
+        print(f"Current Bakong token: {current_bakong_token}")
         if not current_bakong_token:
             logging.info("Bakong token not found, renewing...")
             current_bakong_token = await renew_bakong_token()
-
+        # token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiYmMwMTRkMTUzMDc4NGQyMiJ9LCJpYXQiOjE3NzkzMDA5MjQsImV4cCI6MTc4NzA3NjkyNH0.zNY--bamXOSxDm_eO2xqDd8UaciEamwNq5R8JFN4ytg"
         # 1️⃣ Check KHQR payment status
         khqr = KHQR(current_bakong_token)
         check_payment = khqr.check_payment(md5)
@@ -90,14 +138,12 @@ async def verifyMD5(md5: str, booking_id: int, token: str):
             raise HTTPException(status_code=500, detail="payment_info is empty")
 
         # 4️⃣ Logging for debug
-        logging.debug("booking_id: %s", booking_id)
         logging.debug("amount: %s", payment_info_data.get("amount"))
         logging.debug("transaction hash: %s", payment_info_data.get("hash"))
         logging.debug("createdDateMs: %s", datetime.utcfromtimestamp(payment_info_data.get("createdDateMs") / 1000).isoformat())
 
-        # 5️⃣ Prepare payment data for DB / Node.js endpoint
+        # 5️⃣ Prepare payment data to return
         payment_data = {
-            "bookingId": booking_id,
             "amount": payment_info_data.get("amount"),
             "method": "KHQR",
             "transaction_id": payment_info_data.get("hash"),
