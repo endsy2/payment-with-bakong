@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.controller import BakongController
+from pythonjsonlogger import jsonlogger
 import logging
 import os
 
@@ -14,11 +15,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging here
-logging.basicConfig(
-    level=logging.DEBUG,  # Show all DEBUG messages
-    format="%(asctime)s [%(levelname)s] %(message)s",
-)
+# Configure JSON logging to stdout
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+handler = logging.StreamHandler()
+formatter = jsonlogger.JsonFormatter("%(asctime)s %(levelname)s %(name)s %(message)s")
+handler.setFormatter(formatter)
+
+root_logger = logging.getLogger()
+root_logger.handlers = [handler]
+root_logger.setLevel(log_level)
 
 # Include your router
 app.include_router(BakongController.router)
